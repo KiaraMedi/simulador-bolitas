@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Juego de Azar - Reglas de Combinación Nula</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --color-blue: #3182ce;
+            --color-blue-hover: #2b6cb0;
+            --color-red: #e53e3e;
+            --color-red-hover: #c53030;
+            --color-accent: #4a5568;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .rules-box {
+            background-color: #f7fafc;
+            border-left: 4px solid var(--color-accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .rules-box h2 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #4a5568;
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .rule-item {
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .setup-section {
+            text-align: center;
+            margin-bottom: 35px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: var(--border-radius);
+            border: 1px dashed #e2e8f0;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-blue { background-color: var(--color-blue); color: white; }
+        .btn-blue:hover { background-color: var(--color-blue-hover); }
+        .btn-red { background-color: var(--color-red); color: white; }
+        .btn-red:hover { background-color: var(--color-red-hover); }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+        
+        .btn-turn-A { background-color: #2b6cb0; color: white; box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3); }
+        .btn-turn-A:hover { background-color: #23527c; }
+        .btn-turn-B { background-color: #c53030; color: white; box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3); }
+        .btn-turn-B:hover { background-color: #962424; }
+
+        button.selected {
+            outline: 3px solid #1a202c;
+            transform: scale(1.03);
+        }
+
+        .game-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 35px;
+        }
+
+        .turn-indicator {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+        .turn-A { background-color: #ebf8ff; color: #2b6cb0; }
+        .turn-B { background-color: #fff5f5; color: #c53030; }
+
+        .box-container {
+            background: #edf2f7;
+            border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            margin-bottom: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .marbles-left {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .player-column {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-column.active-col {
+            border: 2px dashed var(--color-accent);
+            background: #fff;
+        }
+
+        .column-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #edf2f7;
+            width: 100%;
+            text-align: center;
+        }
+
+        .title-col-A { color: var(--color-blue); }
+        .title-col-B { color: var(--color-red); }
+
+        .marbles-vertical-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .marble-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            width: 85%;
+            justify-content: space-between;
+            animation: popIn 0.3s ease-out;
+        }
+
+        .turn-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .marble {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.15), inset 0 -3px 6px rgba(0,0,0,0.2);
+        }
+
+        .marble.blue { background: radial-gradient(circle at 30% 30%, #63b3ed, #3182ce); }
+        .marble.red { background: radial-gradient(circle at 30% 30%, #fc8181, #e53e3e); }
+
+        .status-message {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 28px;
+            max-width: 90%;
+        }
+
+        .stats-panel {
+            border-top: 2px solid #edf2f7;
+            padding-top: 25px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-top: 5px;
+        }
+
+        .stat-pct {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .footer-controls {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .rules-grid { grid-template-columns: 1fr; }
+            .board-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Juego de Azar: Extracción de Bolitas</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">Lógica Corregida - Combinaciones Nulas y Repeticiones</p>
+    </header>
+
+    <div class="rules-box">
+        <h2>Reglas de Combinación Oficiales</h2>
+        <p>Se realizan 4 extracciones intercaladas. Luego se analiza el par obtenido por cada jugador:</p>
+        <div class="rules-grid">
+            <div class="rule-item">
+                <strong>Objetivos de Victoria:</strong><br>
+                • <strong>Jugador A</strong> gana con: <b>Azul-Azul</b> o <b>Rojo-Rojo</b>.<br>
+                • <strong>Jugador B</strong> gana con: <b>Azul-Rojo</b>.
+            </div>
+            <div class="rule-item">
+                <strong>Casos Especiales (Rojo - Azul):</strong><br>
+                • Si un jugador saca <b>Rojo-Azul</b>, su mano es <strong>Nula</strong> (no califica).<br>
+                • Si <strong>ambos</strong> sacan <b>Rojo-Azul</b>, la ronda se repite sin ganadores.
+            </div>
+        </div>
+    </div>
+
+    <div class="setup-section" id="setupSection">
+        <h3>Seleccioná tu rol para esta ronda</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Se extraerán dos bolitas para cada uno antes de calcular el veredicto final.</p>
+        <div class="btn-group">
+            <button class="btn-blue" id="btnChooseA" onclick="selectRole('A')">Ser Jugador A</button>
+            <button class="btn-red" id="btnChooseB" onclick="selectRole('B')">Ser Jugador B</button>
+        </div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+        <div class="turn-indicator" id="turnIndicator">Turno: Jugador A</div>
+        <div class="box-container" id="boxVisual">📦</div>
+        <div class="marbles-left" id="marblesLeftText">Bolitas en la caja: 5 Azules / 5 Rojas</div>
+        
+        <div class="board-grid">
+            <div class="player-column" id="colA">
+                <div class="column-title title-col-A">Mano del Jugador A</div>
+                <div class="marbles-vertical-list" id="listA"></div>
+            </div>
+            
+            <div class="player-column" id="colB">
+                <div class="column-title title-col-B">Mano del Jugador B</div>
+                <div class="marbles-vertical-list" id="listB"></div>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage">Le toca extraer al Jugador A</div>
+
+        <div class="btn-group">
+            <button id="btnAction" onclick="handleExtractionTurn()">Jugador A: Extraer Bolita</button>
+            <button class="btn-secondary" id="btnNextRound" onclick="nextRound()" style="display: none;">Siguiente Ronda</button>
+        </div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>Victorias Jugador A</div>
+                <div class="stat-val" id="scoreA">0</div>
+                <div class="stat-pct" id="pctA">0%</div>
+            </div>
+            <div class="stat-card">
+                <div>Victorias Jugador B</div>
+                <div class="stat-val" id="scoreB">0</div>
+                <div class="stat-pct" id="pctB">0%</div>
+            </div>
+            <div class="stat-card">
+                <div>Total Partidas</div>
+                <div class="stat-val" id="totalGames">0</div>
+                <div class="stat-pct">Rondas concluidas</div>
+            </div>
+        </div>
+
+        <div class="footer-controls">
+            <button class="btn-secondary" onclick="resetAll()">Reiniciar Todo el Marcador</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stats = { winsA: 0, winsB: 0, total: 0 };
+    let currentBox = [];
+    let handA = [];
+    let handB = [];
+    let chosenRole = null;
+    let currentTurn = 'A'; 
+    let roundOver = false;
+    let totalClicksInRound = 0;
+
+    function initBox() {
+        currentBox = [];
+        for (let i = 0; i < 5; i++) currentBox.push('Azul');
+        for (let i = 0; i < 5; i++) currentBox.push('Rojo');
+    }
+
+    function updateBoxText() {
+        const blues = currentBox.filter(m => m === 'Azul').length;
+        const reds = currentBox.filter(m => m === 'Rojo').length;
+        document.getElementById('marblesLeftText').innerText = `Bolitas restantes en la caja: ${blues} Azules / ${reds} Rojas (Total: ${currentBox.length})`;
+    }
+
+    function selectRole(role) {
+        chosenRole = role;
+        document.getElementById('btnChooseA').classList.remove('selected');
+        document.getElementById('btnChooseB').classList.remove('selected');
+        
+        if (role === 'A') document.getElementById('btnChooseA').classList.add('selected');
+        if (role === 'B') document.getElementById('btnChooseB').classList.add('selected');
+
+        roundOver = false;
+        handA = [];
+        handB = [];
+        totalClicksInRound = 0;
+        currentTurn = 'A'; 
+        initBox();
+        updateBoxText();
+        
+        document.getElementById('listA').innerHTML = '';
+        document.getElementById('listB').innerHTML = '';
+        document.getElementById('gameArea').style.display = 'flex';
+        document.getElementById('btnAction').style.display = 'inline-block';
+        document.getElementById('btnNextRound').style.display = 'none';
+        
+        updateTurnVisuals();
+    }
+
+    function updateTurnVisuals() {
+        if (roundOver) return;
+
+        const indicator = document.getElementById('turnIndicator');
+        const actionBtn = document.getElementById('btnAction');
+        const statusMsg = document.getElementById('statusMessage');
+        const colA = document.getElementById('colA');
+        const colB = document.getElementById('colB');
+
+        indicator.className = `turn-indicator turn-${currentTurn}`;
+        indicator.innerText = `Turno Actual: Jugador ${currentTurn}`;
+        actionBtn.className = currentTurn === 'A' ? 'btn-turn-A' : 'btn-turn-B';
+        
+        if (currentTurn === 'A') {
+            colA.classList.add('active-col');
+            colB.classList.remove('active-col');
+        } else {
+            colB.classList.add('active-col');
+            colA.classList.remove('active-col');
+        }
+
+        let numExtraccion = (currentTurn === 'A' ? handA.length : handB.length) + 1;
+
+        if (chosenRole === currentTurn) {
+            actionBtn.innerText = `Tu turno (Jugador ${currentTurn}): Extraer Bolita #${numExtraccion}`;
+            statusMsg.innerText = `Es tu turno de extraer tu bolita #${numExtraccion}.`;
+            statusMsg.style.color = 'var(--text-main)';
+        } else {
+            actionBtn.innerText = `Simular turno del Jugador ${currentTurn}: Extraer Bolita #${numExtraccion}`;
+            statusMsg.innerText = `Le toca al Jugador ${currentTurn} sacar su bolita #${numExtraccion}.`;
+            statusMsg.style.color = 'var(--text-muted)';
+        }
+    }
+
+    function handleExtractionTurn() {
+        if (roundOver || currentBox.length === 0) return;
+
+        const randomIndex = Math.floor(Math.random() * currentBox.length);
+        const extractedColor = currentBox.splice(randomIndex, 1)[0];
+        
+        totalClicksInRound++;
+
+        if (currentTurn === 'A') {
+            handA.push(extractedColor);
+            appendMarbleToColumn('A', extractedColor, handA.length);
+        } else {
+            handB.push(extractedColor);
+            appendMarbleToColumn('B', extractedColor, handB.length);
+        }
+        
+        updateBoxText();
+
+        if (totalClicksInRound === 4) {
+            evaluateFinalResults();
+            return;
+        }
+
+        currentTurn = (currentTurn === 'A') ? 'B' : 'A';
+        updateTurnVisuals();
+    }
+
+    function appendMarbleToColumn(player, color, itemIndex) {
+        const targetList = player === 'A' ? document.getElementById('listA') : document.getElementById('listB');
+        
+        const row = document.createElement('div');
+        row.className = 'marble-row';
+        
+        const tag = document.createElement('span');
+        tag.className = 'turn-tag';
+        tag.innerText = `Bolita #${itemIndex}`;
+        
+        const ball = document.createElement('div');
+        ball.className = `marble ${color === 'Azul' ? 'blue' : 'red'}`;
+        
+        row.appendChild(tag);
+        row.appendChild(ball);
+        targetList.appendChild(row);
+    }
+
+    function evaluateFinalResults() {
+        roundOver = true;
+
+        // Comprobación de patrones individuales
+        let combA = `${handA[0]}-${handA[1]}`;
+        let combB = `${handB[0]}-${handB[1]}`;
+
+        // Estados lógicos de éxito según la regla pasada
+        let evalA_ValidWin = (combA === 'Azul-Azul' || combA === 'Rojo-Rojo');
+        let evalB_ValidWin = (combB === 'Azul-Rojo');
+
+        let evalA_Null = (combA === 'Rojo-Azul');
+        let evalB_Null = (combB === 'Rojo-Azul');
+
+        const msgElement = document.getElementById('statusMessage');
+        document.getElementById('btnAction').style.display = 'none';
+        document.getElementById('btnNextRound').style.display = 'inline-block';
+        
+        document.getElementById('colA').classList.remove('active-col');
+        document.getElementById('colB').classList.remove('active-col');
+
+        // REGLA 1: Ambos sacan R - A -> Ronda repetida (No cuenta en estadísticas)
+        if (evalA_Null && evalB_Null) {
+            msgElement.innerText = `Ambos sacaron Rojo-Azul (Mano Nula). ¡La ronda debe repetirse y nadie gana!`;
+            msgElement.style.color = 'var(--color-accent)';
+            updateStatsUI();
+            return;
+        }
+
+        // Si la ronda es válida, sumamos la partida jugada
+        stats.total++;
+
+        // REGLA 2: Analizar victorias descartando las manos nulas (R - A)
+        let effectiveWinA = evalA_ValidWin && !evalA_Null;
+        let effectiveWinB = evalB_ValidWin && !evalB_Null;
+
+        if (effectiveWinA && !effectiveWinB) {
+            stats.winsA++;
+            let feedback = (chosenRole === 'A') ? "¡Ganaste tu apuesta! 🎉" : "Ganó el rol contrario.";
+            msgElement.innerText = `¡Victoria para el Jugador A! Combinación exitosa (${combA}). Mano de B fue ${evalB_Null ? 'Nula' : combB}. ${feedback}`;
+            msgElement.style.color = 'var(--color-blue)';
+        } 
+        else if (effectiveWinB && !effectiveWinA) {
+            stats.winsB++;
+            let feedback = (chosenRole === 'B') ? "¡Ganaste tu apuesta! 🎉" : "Ganó el rol contrario.";
+            msgElement.innerText = `¡Victoria para el Jugador B! Combinación exitosa (${combB}). Mano de A fue ${evalA_Null ? 'Nula' : combA}. ${feedback}`;
+            msgElement.style.color = 'var(--color-red)';
+        } 
+        else if (effectiveWinA && effectiveWinB) {
+            // Caso borde: ambos cumplen objetivo (ej: A saca A-A y B saca A-R)
+            msgElement.innerText = `Empate Técnico: Ambos jugadores lograron combinaciones ganadoras simultáneas (A: ${combA} / B: ${combB}).`;
+            msgElement.style.color = 'var(--color-accent)';
+        } 
+        else {
+            // Ninguno ganó y no fue repetición total (por ejemplo uno sacó R-A y el otro una combinacion no ganadora)
+            let aText = evalA_Null ? 'Nula (R-A)' : combA;
+            let bText = evalB_Null ? 'Nula (R-A)' : combB;
+            msgElement.innerText = `Ronda finalizada sin ganadores. Mano A: ${aText} | Mano B: ${bText}.`;
+            msgElement.style.color = 'var(--text-muted)';
+        }
+
+        updateStatsUI();
+    }
+
+    function nextRound() {
+        chosenRole = null;
+        document.getElementById('btnChooseA').classList.remove('selected');
+        document.getElementById('btnChooseB').classList.remove('selected');
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('statusMessage').innerText = "Elegí tu rol para la nueva ronda.";
+        document.getElementById('statusMessage').style.color = 'var(--text-main)';
+    }
+
+    function updateStatsUI() {
+        document.getElementById('scoreA').innerText = stats.winsA;
+        document.getElementById('scoreB').innerText = stats.winsB;
+        document.getElementById('totalGames').innerText = stats.total;
+
+        if (stats.total > 0) {
+            document.getElementById('pctA').innerText = ((stats.winsA / stats.total) * 100).toFixed(1) + '%';
+            document.getElementById('pctB').innerText = ((stats.winsB / stats.total) * 100).toFixed(1) + '%';
+        } else {
+            document.getElementById('pctA').innerText = '0%';
+            document.getElementById('pctB').innerText = '0%';
+        }
+    }
+
+    function resetAll() {
+        stats = { winsA: 0, winsB: 0, total: 0 };
+        chosenRole = null;
+        roundOver = false;
+        handA = [];
+        handB = [];
+        totalClicksInRound = 0;
+        document.getElementById('btnChooseA').classList.remove('selected');
+        document.getElementById('btnChooseB').classList.remove('selected');
+        document.getElementById('gameArea').style.display = 'none';
+        updateStatsUI();
+    }
+</script>
+
+</body>
+</html>
